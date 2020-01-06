@@ -44,8 +44,9 @@ class DatasetReader:
                 assert image and labels
                 labels_file = reader.read(labels)
                 # id, x, y, x2, y2
-                labels = [int(v) for line in labels_file for v in line.strip().split()]
-                max_label = max(max_label, *zip(*labels)[0])
+                labels = [[int(float(v)) for v in labels_line.strip().split()] for labels_line in labels_file]
+                label_ids = [v[0] for v in labels]
+                max_label = max(max_label, *label_ids)
                 dataset.add_data(image, labels)
 
         dataset.labels = DatasetReader.read_labels(filename, max_label + 1)
@@ -73,29 +74,41 @@ class FileReader:
         self.zip_objects = {}
         self.base_dir = base_dir
 
-    def read(self, filepath):
+    def read(self, filepath, mode='r'):
+        assert mode in ('r', 'rb')
+
         if '@' in filepath:
             zip_filepath, entrypath = filepath.split('@')
             if zip_filepath not in self.zip_objects:
                 self.zip_objects[zip_filepath] = zipfile.ZipFile(os.path.join(self.base_dir, zip_filepath))
             with self.zip_objects[zip_filepath].open(entrypath) as f:
-                return f.read()
+                return [line for line in f.read().decode('utf-8').split('\n') if line] if mode == 'r' else f.read()
         else:
             with open(os.path.join(self.base_dir, filepath)) as f:
                 return f.read()
 
 class Dataset:
     def __init__(self, dataset_type, base_dir = '.'):
+        assert dataset_type in ('image_classification', 'object_detection')
+
         self.base_dir = os.path.dirname(base_dir)
         self.dataset_type = dataset_type
         self.reader = FileReader(base_dir)
         self.images = []
-        self.label_names = [] # Optional
+        self.labels = [] # Optional label names.
 
     def validate(self):
         """Verify that the dataset is in valid state"""
         assert self.images
-        # TODO
+        if self.dataset_type == 'image_classification':
+            pass
+        elif self.dataset_type == 'object_detection':
+            for image, labels in self.images:
+                assert image
+                for label, x, y, x2, y2 in labels:
+                    assert label >= 0
+                    assert x >= 0 and y >= 0
+                    assert x2 > x and y2 > y
 
     def add_data(self, image, labels):
         assert image
@@ -104,7 +117,7 @@ class Dataset:
         self.images.append((image, labels))
 
     def read_image(self, image_path):
-        return self.reader.read(image_path)
+        return self.reader.read(image_path, 'rb')
 
     def __len__(self):
         return len(self.images)
@@ -124,6 +137,8 @@ class Dataset:
 class DatasetWriter:
     @staticmethod
     def write(dataset, filename):
+        dataset.validate()
+
         base_dir = os.path.dirname(filename)
         dataset.shuffle()
 
@@ -147,7 +162,7 @@ class DatasetWriter:
                     labels_filepath = f'{i}.txt'
                     with labels_zip.open(labels_filepath, 'w') as lf:
                         for l in labels:
-                            lf.write(' '.join([str(ls) for ls in l]) + '\n')
+                            lf.write((' '.join([str(ls) for ls in l]) + '\n').encode('utf-8'))
                     labels = f'{labels_zip_filename}@{labels_filepath}'
                 elif dataset.dataset_type == 'image_classification':
                     assert isinstance(labels, list)
@@ -162,9 +177,9 @@ class DatasetWriter:
         if dataset.dataset_type == 'object_detection':
             labels_zip.close()
 
-        if dataset.label_names:
+        if dataset.labels:
             with open(os.path.join(base_dir, 'labels.txt'), 'w') as f:
-                for label_name in dataset.label_names:
+                for label_name in dataset.labels:
                     f.write(label_name + '\n')
 
     def detect_imagetype(image_binary):

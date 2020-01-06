@@ -1,11 +1,17 @@
 import setuptools
 
 setuptools.setup(name='cvsutils',
-                 version='0.0.0',
+                 version='0.0.1',
                  description="Unofficial utility scripts for Microsoft Custom Vision Service",
-                 packages=['cvsutils'],
+                 packages=setuptools.find_packages(),
                  license='MIT',
-                 install_requires=['tqdm'],
+                 install_requires=['tqdm', 'Pillow', 'requests'],
+                 url='https://github.com/shonohs/cvsutils',
+                 classifiers=[
+                     'Development Status :: 4 - Beta',
+                     'Intended Audience :: Developers',
+                     'License :: OSI Approved :: MIT License'
+                 ],
                  entry_points={
                      'console_scripts': [
                          'cvs_create_project=cvsutils.commands.create_project:main',
@@ -13,7 +19,7 @@ setuptools.setup(name='cvsutils',
                          'cvs_export_model=cvsutils.commands.export_model:main',
                          'cvs_get_domains=cvsutils.commands.get_domains:main',
                          'cvs_train_project=cvsutils.commands.train_project:main',
-                         'cvs_predict_image=cvsutils.commands.predict_image:main'
+                         'cvs_validate_dataset=cvsutils.commands.validate_dataset_file:main'
                      ]
                  }
 )

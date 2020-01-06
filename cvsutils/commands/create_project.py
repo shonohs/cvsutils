@@ -1,6 +1,8 @@
 import argparse
+import io
 import os
 import uuid
+import PIL
 from tqdm import tqdm
 from ..common import Environment
 from ..dataset import DatasetReader
@@ -57,6 +59,11 @@ def create_project(env, dataset_filename, project_name, domain_id):
 
     print(f"Uploaded {len(dataset)} images")
 
+
+def _get_image_size(image):
+    with PIL.Image.open(io.BytesIO(image)) as f:
+        return f.size
+
 def _upload_batch(training_api, dataset_type, project_id, tag_ids, batch_images, batch_labels):
     image_ids = training_api.create_images(project_id, batch_images)
     if dataset_type == 'image_classification':
@@ -64,7 +71,13 @@ def _upload_batch(training_api, dataset_type, project_id, tag_ids, batch_images,
         if labels:
             training_api.set_image_classification_tags(project_id, labels)
     elif dataset_type == 'object_detection':
-        labels = [(image_ids[image_index], [tag_ids[l[0]], *l[1:]]) for image_index, labels in enumerate(batch_labels) for l in labels]
+        image_sizes = [_get_image_size(i) for i in batch_images]
+        labels = [(image_ids[image_index], [tag_ids[l[0]],
+                                            l[1] / image_sizes[image_index][0],
+                                            l[2] / image_sizes[image_index][1],
+                                            l[3] / image_sizes[image_index][0],
+                                            l[4] / image_sizes[image_index][1]]) for image_index, labels in enumerate(batch_labels) for l in labels]
+
         if labels:
             training_api.set_object_detection_tags(project_id, labels)
     else:

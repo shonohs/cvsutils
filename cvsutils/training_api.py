@@ -60,8 +60,9 @@ class TrainingApi:
         assert isinstance(image_binary_list, list)
 
         url = self.CREATE_IMAGE_API.format(project_id=project_id)
-        response = self._request('POST', url, files={f'files[{i}]': binary for i, binary in enumerate(image_binary_list)})
-        return [uuid.UUID(response_image['image']['id']) for response_image in response['images']]
+        response = self._request('POST', url, files={str(i): binary for i, binary in enumerate(image_binary_list)})
+        sorted_images = sorted(response['images'], key=lambda i: int(i['sourceUrl'].replace('"', '')))
+        return [uuid.UUID(response_image['image']['id']) for response_image in sorted_images]
 
     def create_tag(self, project_id, tag_name):
         url = self.TAG_API.format(project_id=project_id)
@@ -120,10 +121,10 @@ class TrainingApi:
         url = self.TAGGED_IMAGES_API.format(project_id=project_id)
         all_images = []
         def parse_labels(response):
-            if 'tags' in response:
+            if 'regions' in response:
+                return [[uuid.UUID(r['tagId']), r['left'], r['top'], r['left'] + r['width'], r['top'] + r['height']] for r in response['regions']]
+            elif 'tags' in response:
                 return [uuid.UUID(t['tagId']) for t in response['tags']]
-            elif 'regions' in response:
-                return [[uuid.UUID(r['regionId']), r['left'], r['right'], r['left'] + r['width'], r['top'] + r['height']] for r in r['regions']]
             else:
                 raise RuntimeError
 
@@ -183,19 +184,27 @@ class TrainingApi:
         response = self._request('POST', url, json=tags)
         return len(response['created']) == len(image_tag_ids)
 
-    def set_object_detection_tags(self, project_id, image_id, labels):
+    def set_object_detection_tags(self, project_id, image_ids_labels):
+        """
+        image_ids_labels: [(image_id, labels), (image_id, labels), ...]
+        """
         assert isinstance(project_id, uuid.UUID)
-        assert isinstance(image_id, uuid.UUID)
-        assert all(isinstance(l[0], uuid.UUID) for l in labels)
-        assert max([i for label in labels for i in label[1:]]) <= 1.0
-        assert min([i for label in labels for i in label[1:]]) >= 0
+        assert all(isinstance(l[0], uuid.UUID) for l in image_ids_labels) and all(isinstance(l[1], list) for l in image_ids_labels)
+        assert max([i for label in image_ids_labels for i in label[1][1:]]) <= 1.0
+        assert min([i for label in image_ids_labels for i in label[1][1:]]) >= 0
 
         url = self.SET_IMAGE_REGION_API.format(project_id=project_id)
-        regions = [{'imageId': image_id, 'tagId': l[0],
-                    'left': l[1], 'top': l[2],
-                    'width': l[3] - l[1], 'height': l[4] - l[2]} for l in labels]
-        response = self._request('POST', url, json={'regions': regions})
-        return len(response['created']) == len(labels)
+        regions = [{'imageId': str(l[0]), 'tagId': str(l[1][0]),
+                    'left': l[1][1], 'top': l[1][2],
+                    'width': l[1][3] - l[1][1], 'height': l[1][4] - l[1][2]} for l in image_ids_labels]
+
+        created = 0
+        for i in range(int((len(regions)-0.5)//64)+1):
+            batch = regions[i*64:(i+1)*64]
+            response = self._request('POST', url, json={'regions': batch})
+            created += len(response['created'])
+
+        return created == len(image_ids_labels)
 
     def remove_project(self, project_id):
         raise NotImplementedError
