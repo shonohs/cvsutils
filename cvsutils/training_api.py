@@ -18,6 +18,7 @@ class TrainingApi:
     SET_IMAGE_TAG_API = PROJECT_API + '/images/tags'
     SET_IMAGE_REGION_API = PROJECT_API + '/images/regions'
 
+    ITERATIONS_API = PROJECT_API + '/iterations'
     ITERATION_API = PROJECT_API + '/iterations/{iteration_id}'
     ITERATION_EVAL_API = ITERATION_API + '/performance'
     EXPORT_API = ITERATION_API + '/export'
@@ -27,15 +28,21 @@ class TrainingApi:
         self.api_url = api_url
         self.training_key = training_key
 
-    def train(self, project_id, force, domain_id=None):
-        if domain_id:
+    def train(self, project_id, force, domain_id=None, classification_type=None):
+        assert (not classification_type) or classification_type in ['multilabel', 'multiclass']
+        if domain_id or classification_type:
             url = self.PROJECT_API.format(project_id=project_id)
             response = self._request('GET', url)
             current_domain_id = uuid.UUID(response['settings']['domainId'])
-            if current_domain_id != domain_id:
+            updated = False
+            if domain_id and current_domain_id != domain_id:
                 response['settings']['domainId'] = str(domain_id)
+                updated = True
+            if classification_type and response['settings']['classificationType'] == classification_type:
+                response['settings']['classificationType'] = classification_type
+                updated = True
+            if updated:
                 self._request('PATCH', url, json=response)
-                print(f"Changed the domain to {domain_id}")
 
         url = self.TRAIN_PROJECT_API.format(project_id=project_id)
         params = {'forceTrain': force}
@@ -81,6 +88,7 @@ class TrainingApi:
     def get_exports(self, project_id, iteration_id, platform, flavor):
         url = self.EXPORT_API.format(project_id=project_id, iteration_id=iteration_id)
         response = self._request('GET', url)
+
         for entry in response:
             if entry['platform'].lower() == platform and ((entry['flavor'] == None and flavor == None) or entry['flavor'].lower() == flavor):
                 return {'status': entry['status'], 'url': entry['downloadUri']}
@@ -90,6 +98,16 @@ class TrainingApi:
         url = self.ITERATION_API.format(project_id=project_id, iteration_id=iteration_id)
         response = self._request('GET', url)
         return {'status': response['status']} # TODO
+
+    def get_iterations(self, project_id):
+        url = self.ITERATIONS_API.format(project_id=project_id)
+        response = self._request('GET', url)
+        iterations = []
+
+        for r in response:
+            domain_id = uuid.UUID(r['domainId']) if r['domainId'] else None
+            iterations.append({'id': uuid.UUID(r['id']), 'name': r['name'], 'domain_id': domain_id, 'created_at': r['created']})
+        return iterations
 
     def get_iteration_eval(self, project_id, iteration_id, threshold=0.5, iou_threshold=0.3):
         url = self.ITERATION_EVAL_API.format(project_id=project_id, iteration_id=iteration_id)
@@ -108,6 +126,13 @@ class TrainingApi:
             'description': response['description'],
             'domain_id': uuid.UUID(response['settings']['domainId'])
         }
+
+    def get_projects(self):
+        response = self._request('GET', self.CREATE_PROJECT_API)
+        projects = []
+        for r in response:
+            projects.append({'id': uuid.UUID(r['id']), 'name': r['name'], 'created_at': r['created'], 'modified_at': r['lastModified']})
+        return projects
 
     def get_tags(self, project_id):
         """Get a list of pairs of (tag_name, tag_id). The returned list is sorted by tag_name."""
@@ -174,6 +199,10 @@ class TrainingApi:
         response = self._request('GET', self.DOMAINS_API)
         return [{'id': r['id'], 'name': r['name'], 'type': self._map_domain_type(r['type'])} for r in response]
 
+    def remove_iteration(self, project_id, iteration_id):
+        url = self.ITERATION_API.format(project_id=project_id, iteration_id=iteration_id)
+        self._request('DELETE', url)
+
     def set_image_classification_tags(self, project_id, image_tag_ids):
         assert isinstance(project_id, uuid.UUID)
         assert all(isinstance(t[0], uuid.UUID) for t in image_tag_ids)
@@ -210,7 +239,7 @@ class TrainingApi:
         raise NotImplementedError
 
     def _request(self, method, api_path, params=None, data=None, files=None, json=None):
-        assert method in ['GET', 'POST', 'PATCH']
+        assert method in ['GET', 'POST', 'PATCH', 'DELETE']
 
         url = urllib.parse.urljoin(self.api_url, api_path)
         headers = {'Training-Key': self.training_key}
@@ -219,5 +248,4 @@ class TrainingApi:
             print(response.json())
 
         response.raise_for_status()
-
-        return response.json()
+        return response.json() if method != 'DELETE' else None
