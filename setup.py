@@ -18,6 +18,8 @@ setuptools.setup(name='cvsutils',
                          'cvs_download_project=cvsutils.commands.download_project:main',
                          'cvs_export_model=cvsutils.commands.export_model:main',
                          'cvs_get_domains=cvsutils.commands.get_domains:main',
+                         'cvs_list_projects=cvsutils.commands.list_projects:main',
+                         'cvs_remove_iteration=cvsutils.commands.remove_iteration:main',
                          'cvs_train_project=cvsutils.commands.train_project:main',
                          'cvs_validate_dataset=cvsutils.commands.validate_dataset_file:main'
                      ]

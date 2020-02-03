@@ -46,7 +46,8 @@ class DatasetReader:
                 # id, x, y, x2, y2
                 labels = [[int(float(v)) for v in labels_line.strip().split()] for labels_line in labels_file]
                 label_ids = [v[0] for v in labels]
-                max_label = max(max_label, *label_ids)
+                if label_ids:
+                    max_label = max(max_label, *label_ids)
                 dataset.add_data(image, labels)
 
         dataset.labels = DatasetReader.read_labels(filename, max_label + 1)
