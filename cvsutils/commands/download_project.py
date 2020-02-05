@@ -20,7 +20,7 @@ def download_project(env, project_id, dataset_filename):
     if os.path.exists(os.path.join(os.path.dirname(dataset_filename), 'labels.txt')):
         raise RuntimeError("labels.txt already exists")
 
-    training_api = TrainingApi(env.training_endpoint, env.training_key)
+    training_api = TrainingApi(env)
     domain_id = training_api.get_project(project_id)['domain_id']
     domain_type = training_api.get_domain(domain_id)['type']
     dataset = Dataset(domain_type, os.path.dirname(dataset_filename))

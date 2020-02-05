@@ -5,7 +5,7 @@ from ..training_api import TrainingApi
 
 
 def remove_iteration(env, project_id, iteration_id):
-    training_api = TrainingApi(env.training_endpoint, env.training_key)
+    training_api = TrainingApi(env)
 
     training_api.remove_iteration(project_id, iteration_id)
 

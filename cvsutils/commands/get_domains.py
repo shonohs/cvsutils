@@ -2,7 +2,7 @@ from ..common import Environment
 from ..training_api import TrainingApi
 
 def get_domains(env):
-    training_api = TrainingApi(env.training_endpoint, env.training_key)
+    training_api = TrainingApi(env)
     domains = training_api.get_domains()
 
     for domain in domains:

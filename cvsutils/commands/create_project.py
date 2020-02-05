@@ -13,7 +13,7 @@ DEFAULT_OD_DOMAIN_ID = 'da2e3a8a-40a5-4171-82f4-58522f70fbc1'
 BATCH_SIZE = 32
 
 def create_project(env, dataset_filename, project_name, domain_id):
-    training_api = TrainingApi(env.training_endpoint, env.training_key)
+    training_api = TrainingApi(env)
     dataset = DatasetReader.open(dataset_filename)
 
     # Set default project name. {dir_name}/{file_name}

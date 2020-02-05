@@ -6,7 +6,7 @@ from ..training_api import TrainingApi
 
 
 def train_project(env, project_id, force, domain_id, classification_type):
-    training_api = TrainingApi(env.training_endpoint, env.training_key)
+    training_api = TrainingApi(env)
 
     iteration_id = training_api.train(project_id, force, domain_id, classification_type)
     print(f"Training started: iteration_id={iteration_id}")

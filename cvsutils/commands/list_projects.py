@@ -3,7 +3,7 @@ from ..common import Environment
 from ..training_api import TrainingApi
 
 def list_projects(env, verbose):
-    training_api = TrainingApi(env.training_endpoint, env.training_key)
+    training_api = TrainingApi(env)
 
     projects = training_api.get_projects()
     for project in projects:

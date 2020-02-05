@@ -40,7 +40,7 @@ def export_model(env, project_id, iteration_id, export_type, output_filename):
 
     platform, flavor = EXPORT_TYPES[export_type]
 
-    training_api = TrainingApi(env.training_endpoint, env.training_key)
+    training_api = TrainingApi(env)
 
     requested = False
     while True:

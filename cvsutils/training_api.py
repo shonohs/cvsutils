@@ -1,7 +1,7 @@
 import requests
 import urllib.parse
 import uuid
-from .dataset import Dataset
+
 
 class TrainingApi:
     CREATE_PROJECT_API = '/customvision/v3.0/training/projects'
@@ -21,12 +21,14 @@ class TrainingApi:
     ITERATIONS_API = PROJECT_API + '/iterations'
     ITERATION_API = PROJECT_API + '/iterations/{iteration_id}'
     ITERATION_EVAL_API = ITERATION_API + '/performance'
+    ITERATION_PUBLISH_API = ITERATION_API + '/publish'
     EXPORT_API = ITERATION_API + '/export'
     DOMAIN_API = '/customvision/v3.0/training/domains/{domain_id}'
 
-    def __init__(self, api_url, training_key):
-        self.api_url = api_url
-        self.training_key = training_key
+    def __init__(self, env):
+        self.env = env
+        self.api_url = env.training_endpoint
+        self.training_key = env.training_key
 
     def train(self, project_id, force, domain_id=None, classification_type=None):
         assert (not classification_type) or classification_type in ['multilabel', 'multiclass']
@@ -97,7 +99,20 @@ class TrainingApi:
     def get_iteration(self, project_id, iteration_id):
         url = self.ITERATION_API.format(project_id=project_id, iteration_id=iteration_id)
         response = self._request('GET', url)
-        return {'status': response['status']} # TODO
+        if response['classificationType'] == 'Multiclass':
+            task_type = 'multiclass_classification'
+        elif response['classificationType'] == 'Multilabel':
+            task_type = 'multilabel_classification'
+        else:
+            task_type = 'object_detection'
+
+        return {'id': iteration_id,
+                'project_id': project_id,
+                'status': response['status'],
+                'publish_name': response['publishName'],
+                'domain_id': uuid.UUID(response['domainId']),
+                'task_type': task_type
+        }
 
     def get_iterations(self, project_id):
         url = self.ITERATIONS_API.format(project_id=project_id)
@@ -198,6 +213,17 @@ class TrainingApi:
     def get_domains(self):
         response = self._request('GET', self.DOMAINS_API)
         return [{'id': r['id'], 'name': r['name'], 'type': self._map_domain_type(r['type'])} for r in response]
+
+    def publish_iteration(self, project_id, iteration_id, publish_name):
+        url = self.ITERATION_PUBLISH_API.format(project_id=project_id, iteration_id=iteration_id)
+        params = {'publishName': publish_name,
+                  'predictionId': self.env.prediction_resource_id}
+
+        self._request('POST', url, params=params)
+
+    def unpublish_iteration(self, project_id, iteration_id):
+        url = self.ITERATION_PUBLISH_API.format(project_id=project_id, iteration_id=iteration_id)
+        self._request('DELETE', url)
 
     def remove_iteration(self, project_id, iteration_id):
         url = self.ITERATION_API.format(project_id=project_id, iteration_id=iteration_id)
