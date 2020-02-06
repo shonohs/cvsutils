@@ -79,5 +79,5 @@ def with_published(training_api, iteration):
     yield publish_name
 
     if published:
-        training_api.unpublish_iteration(project_id, iteration_id)
+        training_api.unpublish_iteration(iteration['project_id'], iteration['id'])
         print("Unpublished the iteration")

@@ -219,11 +219,13 @@ class TrainingApi:
         params = {'publishName': publish_name,
                   'predictionId': self.env.prediction_resource_id}
 
-        self._request('POST', url, params=params)
+        # This API doesn't have response body.
+        self._request('POST', url, params=params, raw_response=True)
 
     def unpublish_iteration(self, project_id, iteration_id):
         url = self.ITERATION_PUBLISH_API.format(project_id=project_id, iteration_id=iteration_id)
-        self._request('DELETE', url)
+        # This API doesn't have response body.
+        self._request('DELETE', url, raw_response=True)
 
     def remove_iteration(self, project_id, iteration_id):
         url = self.ITERATION_API.format(project_id=project_id, iteration_id=iteration_id)
@@ -264,7 +266,7 @@ class TrainingApi:
     def remove_project(self, project_id):
         raise NotImplementedError
 
-    def _request(self, method, api_path, params=None, data=None, files=None, json=None):
+    def _request(self, method, api_path, params=None, data=None, files=None, json=None, raw_response=False):
         assert method in ['GET', 'POST', 'PATCH', 'DELETE']
 
         url = urllib.parse.urljoin(self.api_url, api_path)
@@ -274,4 +276,7 @@ class TrainingApi:
             print(response.json())
 
         response.raise_for_status()
+        if raw_response:
+            return response
+
         return response.json() if method != 'DELETE' else None

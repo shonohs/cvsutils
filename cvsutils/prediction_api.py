@@ -42,7 +42,7 @@ class PredictionApi:
                    'Content-Type': 'application/octet-stream'}
         response = requests.request('POST', url, data=data, headers=headers)
         if not response.ok:
-            print(response.json())
+            print(response)
 
         response.raise_for_status()
         return response.json()

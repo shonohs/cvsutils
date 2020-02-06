@@ -9,6 +9,8 @@ from ..evaluator import MulticlassClassificationEvaluator, MultilabelClassificat
 from ..training_api import TrainingApi
 from ..prediction_api import PredictionApi
 
+MAX_IMAGE_SIZE = 4194304
+
 
 def evaluate_project(env, project_id, iteration_id, dataset_filename):
     training_api = TrainingApi(env)
@@ -29,6 +31,12 @@ def evaluate_project(env, project_id, iteration_id, dataset_filename):
         predictions = []
         for i in tqdm(range(len(dataset)), "Evaluating the project"):
             image, labels = dataset.get(i)
+            if len(image) > MAX_IMAGE_SIZE:
+                tqdm.write(f"Image {i}: image size is too big ({len(image)}). re-compressing...")
+                image = _compress_image(image)
+                if len(image) > MAX_IMAGE_SIZE:
+                    tqdm.write(f"failed. skipping image {i}")
+
             pred = prediction_api.predict(project_id, dataset.dataset_type, publish_name, image)
             w, h = _get_image_size(image)
             predictions.append([[label_names.index(p['label_name']), p['probability'], p['left'] * w, p['top'] * h, p['right'] * w, p['bottom'] * h] for p in pred])
@@ -52,6 +60,11 @@ def _get_image_size(image):
     with PIL.Image.open(io.BytesIO(image)) as f:
         return f.size
 
+def _compress_image(image):
+    output = io.BytesIO()
+    with PIL.Image.open(io.BytesIO(image)) as f:
+        f.save(output, format='JPEG')
+        return output.getvalue()
 
 def main():
     parser = argparse.ArgumentParser("Evaluate a project with a validation dataset")
