@@ -10,20 +10,14 @@ from ..dataset import Dataset, DatasetWriter
 from ..training_api import TrainingApi
 
 
-def download_project(env, project_id, dataset_filename):
-    if os.path.exists(dataset_filename):
-        raise RuntimeError(f"{dataset_filename} already exists")
-    if os.path.exists(os.path.join(os.path.dirname(dataset_filename), 'images.zip')):
-        raise RuntimeError("images.zip already exists")
-    if os.path.exists(os.path.join(os.path.dirname(dataset_filename), 'labels.zip')):
-        raise RuntimeError("labels.zip already exists")
-    if os.path.exists(os.path.join(os.path.dirname(dataset_filename), 'labels.txt')):
-        raise RuntimeError("labels.txt already exists")
+def download_project(env, project_id, output_directory):
+    if os.path.exists(output_directory):
+        raise RuntimeError(f"{output_directory} already exists")
 
     training_api = TrainingApi(env)
     domain_id = training_api.get_project(project_id)['domain_id']
     domain_type = training_api.get_domain(domain_id)['type']
-    dataset = Dataset(domain_type, os.path.dirname(dataset_filename))
+    dataset = Dataset(domain_type, output_directory)
 
     tags = training_api.get_tags(project_id)
     tag_names, tag_ids = zip(*tags)
@@ -54,18 +48,18 @@ def download_project(env, project_id, dataset_filename):
 
     print(f"Downloaded {len(dataset)} images")
 
-    os.makedirs(os.path.dirname(dataset_filename), exist_ok=True)
-    DatasetWriter.write(dataset, dataset_filename)
-    print(f"Saved the dataset to {dataset_filename}")
+    os.makedirs(output_directory, exist_ok=True)
+    DatasetWriter.write(dataset, os.path.join(output_directory, 'images.txt'))
+    print(f"Saved the dataset to {output_directory}")
 
 
 def main():
     parser = argparse.ArgumentParser("Download a project from Custom Vision Service")
     parser.add_argument('project_id', type=str, help="Project id")
-    parser.add_argument('dataset_filename', type=str, help="Dataset file path")
+    parser.add_argument('output_directory', type=str, help="Directory name for the downloaded files")
 
     args = parser.parse_args()
-    download_project(Environment(), uuid.UUID(args.project_id), args.dataset_filename)
+    download_project(Environment(), uuid.UUID(args.project_id), args.output_directory)
 
 
 if __name__ == '__main__':
