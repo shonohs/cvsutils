@@ -25,5 +25,4 @@ setuptools.setup(name='cvsutils',
                          'cvs_train_project=cvsutils.commands.train_project:main',
                          'cvs_validate_dataset=cvsutils.commands.validate_dataset_file:main'
                      ]
-                 }
-)
+                 })

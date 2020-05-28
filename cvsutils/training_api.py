@@ -4,9 +4,9 @@ import uuid
 
 
 class TrainingApi:
-    CREATE_PROJECT_API = '/customvision/v3.0/training/projects'
-    PROJECT_API = '/customvision/v3.0/training/projects/{project_id}'
-    DOMAINS_API = '/customvision/v3.0/training/domains'
+    CREATE_PROJECT_API = '/customvision/v3.2/training/projects'
+    PROJECT_API = '/customvision/v3.2/training/projects/{project_id}'
+    DOMAINS_API = '/customvision/v3.2/training/domains'
 
     CREATE_IMAGE_API = PROJECT_API + '/images'
     TAG_API = PROJECT_API + '/tags'
@@ -23,7 +23,7 @@ class TrainingApi:
     ITERATION_EVAL_API = ITERATION_API + '/performance'
     ITERATION_PUBLISH_API = ITERATION_API + '/publish'
     EXPORT_API = ITERATION_API + '/export'
-    DOMAIN_API = '/customvision/v3.0/training/domains/{domain_id}'
+    DOMAIN_API = '/customvision/v3.2/training/domains/{domain_id}'
 
     def __init__(self, env):
         self.env = env
@@ -85,14 +85,14 @@ class TrainingApi:
         if flavor:
             params['flavor'] = flavor
         response = self._request('POST', url, params)
-        return {'status': response['status']} # TODO
+        return {'status': response['status']}  # TODO
 
     def get_exports(self, project_id, iteration_id, platform, flavor):
         url = self.EXPORT_API.format(project_id=project_id, iteration_id=iteration_id)
         response = self._request('GET', url)
 
         for entry in response:
-            if entry['platform'].lower() == platform and ((entry['flavor'] == None and flavor == None) or entry['flavor'].lower() == flavor):
+            if entry['platform'].lower() == platform and ((entry['flavor'] is None and flavor is None) or entry['flavor'].lower() == flavor):
                 return {'status': entry['status'], 'url': entry['downloadUri']}
         return None
 
@@ -110,9 +110,8 @@ class TrainingApi:
                 'project_id': project_id,
                 'status': response['status'],
                 'publish_name': response['publishName'],
-                'domain_id': uuid.UUID(response['domainId']),
-                'task_type': task_type
-        }
+                'domain_id': uuid.UUID(response['domainId']) if response['domainId'] else None,
+                'task_type': task_type}
 
     def get_iterations(self, project_id):
         url = self.ITERATIONS_API.format(project_id=project_id)
@@ -160,6 +159,7 @@ class TrainingApi:
         num_tagged_images = self._request('GET', url)
         url = self.TAGGED_IMAGES_API.format(project_id=project_id)
         all_images = []
+
         def parse_labels(response):
             if 'regions' in response:
                 return [[uuid.UUID(r['tagId']), r['left'], r['top'], r['left'] + r['width'], r['top'] + r['height']] for r in response['regions']]

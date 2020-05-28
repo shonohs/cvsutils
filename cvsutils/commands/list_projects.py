@@ -2,6 +2,7 @@ import argparse
 from ..common import Environment
 from ..training_api import TrainingApi
 
+
 def list_projects(env, verbose):
     training_api = TrainingApi(env)
 
@@ -22,6 +23,7 @@ def main():
     args = parser.parse_args()
 
     list_projects(Environment(), args.verbose)
+
 
 if __name__ == '__main__':
     main()

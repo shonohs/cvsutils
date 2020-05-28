@@ -56,15 +56,18 @@ def _get_evaluator(iteration):
     elif iteration['task_type'] == 'object_detection':
         return ObjectDetectionEvaluator()
 
+
 def _get_image_size(image):
     with PIL.Image.open(io.BytesIO(image)) as f:
         return f.size
+
 
 def _compress_image(image):
     output = io.BytesIO()
     with PIL.Image.open(io.BytesIO(image)) as f:
         f.save(output, format='JPEG')
         return output.getvalue()
+
 
 def main():
     parser = argparse.ArgumentParser("Evaluate a project with a validation dataset")

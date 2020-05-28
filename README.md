@@ -14,15 +14,28 @@ Those keys and endpoint information can be found in the Custom Vision's settings
 
 ## Available commands
 
-* cvs_create_project
-* cvs_download_project
+```sh
+# Show a list of projects
+cvs_list_projects [--verbose]
+
+# Create a new project
+cvs_create_project <dataset_filepath> [--project_name <name>] [--domain_id <domain_id>]
+
+# Download dataset from a project
+cvs_download_project <project_id> <output_dir>
+
+# Train a model
+cvs_train_project <project_id> [--domain_id <domain_id>] [--type {multiclass,multilabel}] [--force]
+
+# Export a model
+cvs_export_model <project_id> <iteration_id> {tensorflow,coreml,onnx} [--output_filepath <filepath>]
+```
+
+And
 * cvs_evaluate_project
-* cvs_export_model
 * cvs_get_domains
-* cvs_list_projects
 * cvs_predict_image
 * cvs_remove_iteration
-* cvs_train_project
 * cvs_validate_dataset
 
 To see the detailed help, please run the command with "-h" option.

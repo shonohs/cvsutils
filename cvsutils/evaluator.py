@@ -51,7 +51,7 @@ class MulticlassClassificationEvaluator(Evaluator):
         # Average precision
         target_vec = torch.zeros_like(predictions, dtype=torch.uint8)
         for i, t in enumerate(targets):
-            target_vec[i,t] = 1
+            target_vec[i, t] = 1
         ap = sklearn.metrics.average_precision_score(target_vec.view(-1).cpu().numpy(), predictions.view(-1).cpu().numpy(), average='macro')
         self.ap += ap * len(predictions)
         self.total_num += len(predictions)
@@ -77,9 +77,9 @@ class MultilabelClassificationEvaluator(Evaluator):
         """
         assert len(predictions) == len(targets)
         targets = targets.to(torch.uint8)
-        num = torch.mul(predictions > 0.5, targets).long().sum(1) # shape (N,)
-        den = torch.add(predictions > 0.5, targets).ge(1).long().sum(1) # shape (N,)
-        den[den==0] = 1 # To avoid zero-division. If den==0, num should be zero as well.
+        num = torch.mul(predictions > 0.5, targets).long().sum(1)  # shape (N,)
+        den = torch.add(predictions > 0.5, targets).ge(1).long().sum(1)  # shape (N,)
+        den[den == 0] = 1  # To avoid zero-division. If den==0, num should be zero as well.
         self.correct_num += torch.sum(num.to(torch.float32) / den.to(torch.float32))
 
         ap = sklearn.metrics.average_precision_score(targets.view(-1).cpu().numpy(), predictions.view(-1).cpu().numpy(), average='macro')
@@ -210,7 +210,7 @@ class ObjectDetectionSingleIOUEvaluator(Evaluator):
 
 
 class ObjectDetectionEvaluator(Evaluator):
-    def __init__(self, iou_values = [0.3, 0.5, 0.75, 0.9]):
+    def __init__(self, iou_values=[0.3, 0.5, 0.75, 0.9]):
         self.evaluators = [ObjectDetectionSingleIOUEvaluator(iou) for iou in iou_values]
         super(ObjectDetectionEvaluator, self).__init__()
 

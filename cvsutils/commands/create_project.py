@@ -12,6 +12,7 @@ DEFAULT_IC_DOMAIN_ID = 'ee85a74c-405e-4adc-bb47-ffa8ca0c9f31'
 DEFAULT_OD_DOMAIN_ID = 'da2e3a8a-40a5-4171-82f4-58522f70fbc1'
 BATCH_SIZE = 32
 
+
 def create_project(env, dataset_filename, project_name, domain_id):
     training_api = TrainingApi(env)
     dataset = DatasetReader.open(dataset_filename)
@@ -64,6 +65,7 @@ def _get_image_size(image):
     with PIL.Image.open(io.BytesIO(image)) as f:
         return f.size
 
+
 def _upload_batch(training_api, dataset_type, project_id, tag_ids, batch_images, batch_labels):
     image_ids = training_api.create_images(project_id, batch_images)
     if dataset_type == 'image_classification':
@@ -81,7 +83,7 @@ def _upload_batch(training_api, dataset_type, project_id, tag_ids, batch_images,
         if labels:
             training_api.set_object_detection_tags(project_id, labels)
     else:
-        raise RuntimeError(f"Unknown dataset type: {dataset.dataset_type}")
+        raise RuntimeError(f"Unknown dataset type: {dataset_type}")
 
 
 def main():

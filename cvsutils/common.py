@@ -4,18 +4,18 @@ import uuid
 
 
 KNOWN_DOMAINS = {
-    uuid.UUID('ee85a74c-405e-4adc-bb47-ffa8ca0c9f31'): 'image_classification', # General
-    uuid.UUID('c151d5b5-dd07-472a-acc8-15d29dea8518'): 'image_classification', # Food
-    uuid.UUID('ca455789-012d-4b50-9fec-5bb63841c793'): 'image_classification', # Landmarks
-    uuid.UUID('b30a91ae-e3c1-4f73-a81e-c270bff27c39'): 'image_classification', # Retail
-    uuid.UUID('45badf75-3591-4f26-a705-45678d3e9f5f'): 'image_classification', # Adult
-    uuid.UUID('0732100f-1a38-4e49-a514-c9b44c697ab5'): 'image_classification', # General (compact)
-    uuid.UUID('8882951b-82cd-4c32-970b-d5f8cb8bf6d7'): 'image_classification', # Food (compact)
-    uuid.UUID('b5cfd229-2ac7-4b2b-8d0a-2b0661344894'): 'image_classification', # Landmarks (compact)
-    uuid.UUID('6b4faeda-8396-481b-9f8b-177b9fa3097f'): 'image_classification', # Retail (compact)
-    uuid.UUID('da2e3a8a-40a5-4171-82f4-58522f70fbc1'): 'object_detection', # General OD
-    uuid.UUID('1d8ffafe-ec40-4fb2-8f90-72b3b6cecea4'): 'object_detection', # Logo OD
-    uuid.UUID('a27d5ca5-bb19-49d8-a70a-fec086c47f5b'): 'object_detection', # General (compact) OD
+    uuid.UUID('ee85a74c-405e-4adc-bb47-ffa8ca0c9f31'): 'image_classification',  # General
+    uuid.UUID('c151d5b5-dd07-472a-acc8-15d29dea8518'): 'image_classification',  # Food
+    uuid.UUID('ca455789-012d-4b50-9fec-5bb63841c793'): 'image_classification',  # Landmarks
+    uuid.UUID('b30a91ae-e3c1-4f73-a81e-c270bff27c39'): 'image_classification',  # Retail
+    uuid.UUID('45badf75-3591-4f26-a705-45678d3e9f5f'): 'image_classification',  # Adult
+    uuid.UUID('0732100f-1a38-4e49-a514-c9b44c697ab5'): 'image_classification',  # General (compact)
+    uuid.UUID('8882951b-82cd-4c32-970b-d5f8cb8bf6d7'): 'image_classification',  # Food (compact)
+    uuid.UUID('b5cfd229-2ac7-4b2b-8d0a-2b0661344894'): 'image_classification',  # Landmarks (compact)
+    uuid.UUID('6b4faeda-8396-481b-9f8b-177b9fa3097f'): 'image_classification',  # Retail (compact)
+    uuid.UUID('da2e3a8a-40a5-4171-82f4-58522f70fbc1'): 'object_detection',  # General OD
+    uuid.UUID('1d8ffafe-ec40-4fb2-8f90-72b3b6cecea4'): 'object_detection',  # Logo OD
+    uuid.UUID('a27d5ca5-bb19-49d8-a70a-fec086c47f5b'): 'object_detection',  # General (compact) OD
     uuid.UUID('3780a898-81c3-4516-81ae-3a139614e1f3'): 'object_detection',
     uuid.UUID('7ec2ac80-887b-48a6-8df9-8b1357765430'): 'object_detection'
 }

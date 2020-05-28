@@ -4,6 +4,7 @@ import random
 import zipfile
 import PIL.Image
 
+
 class DatasetReader:
     @classmethod
     def open(cls, filename):
@@ -88,15 +89,16 @@ class FileReader:
             with open(os.path.join(self.base_dir, filepath)) as f:
                 return f.read()
 
+
 class Dataset:
-    def __init__(self, dataset_type, base_dir = '.'):
+    def __init__(self, dataset_type, base_dir='.'):
         assert dataset_type in ('image_classification', 'object_detection')
 
         self.base_dir = os.path.dirname(base_dir)
         self.dataset_type = dataset_type
         self.reader = FileReader(base_dir)
         self.images = []
-        self.labels = [] # Optional label names.
+        self.labels = []  # Optional label names.
 
     def validate(self):
         """Verify that the dataset is in valid state"""
@@ -190,7 +192,7 @@ class DatasetWriter:
             return 'jpg'
         elif image_format == 'BMP':
             return 'bmp'
-        elif image_FORMAT == 'PNG':
+        elif image_format == 'PNG':
             return 'png'
         else:
             raise NotImplementedError
