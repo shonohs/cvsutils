@@ -11,17 +11,17 @@ def list_projects(env, verbose):
         print(f"{project['id']}: {project['name']}. Created: {project['created_at']} Modified: {project['modified_at']}")
         if verbose:
             iterations = training_api.get_iterations(project['id'])
-            print("Iterations:")
-            for iteration in iterations:
-                print(f"           {iteration['id']}: {iteration['name']}. Domain: {iteration['domain_id']}")
+            if iterations:
+                print("Iterations:")
+                for iteration in iterations:
+                    print(f"    {iteration['id']}: {iteration['name']}. Domain: {iteration['domain_id']}")
 
 
 def main():
-    parser = argparse.ArgumentParser("Show a list of projects")
-    parser.add_argument('--verbose', action='store_true')
+    parser = argparse.ArgumentParser(description="Show a list of projects")
+    parser.add_argument('--verbose', '-v', action='store_true')
 
     args = parser.parse_args()
-
     list_projects(Environment(), args.verbose)
 
 

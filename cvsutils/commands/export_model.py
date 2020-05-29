@@ -8,6 +8,7 @@ from ..training_api import TrainingApi
 
 EXPORT_TYPES = {
     'tensorflow': ('tensorflow', None),
+    'tensorflowlite': ('tensorflow', 'tensorflowlite'),
     'onnx': ('onnx', None),
     'coreml': ('coreml', None),
     'openvino': ('openvino', None)

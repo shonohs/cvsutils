@@ -30,8 +30,8 @@ class PredictionApi:
                  'bottom': r['boundingBox']['top'] + r['boundingBox']['height']} for r in response['predictions']]
         else:
             return [
-                {'tag_id': uuid.UUID(r['tagId']),
-                 'tag_name': r['tagName'],
+                {'label_id': uuid.UUID(r['tagId']),
+                 'label_name': r['tagName'],
                  'probability': r['probability']} for r in response['predictions']]
 
     def _request(self, api_path, data):
