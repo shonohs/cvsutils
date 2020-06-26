@@ -92,7 +92,7 @@ class TrainingApi:
         response = self._request('GET', url)
 
         for entry in response:
-            if entry['platform'].lower() == platform and ((entry['flavor'] is None and flavor is None) or entry['flavor'].lower() == flavor):
+            if entry['platform'].lower() == platform and ((entry['flavor'] is None and flavor is None) or (entry['flavor'] and entry['flavor'].lower() == flavor)):
                 return {'status': entry['status'], 'url': entry['downloadUri']}
         return None
 
