@@ -1,14 +1,14 @@
 import setuptools
 
+
 setuptools.setup(name='cvsutils',
-                 version='0.0.3',
+                 version='0.1.0',
                  description="Unofficial utility scripts for Microsoft Custom Vision Service",
                  packages=setuptools.find_packages(),
                  license='MIT',
                  install_requires=['tqdm', 'Pillow', 'requests'],
                  url='https://github.com/shonohs/cvsutils',
                  classifiers=[
-                     'Development Status :: 4 - Beta',
                      'Intended Audience :: Developers',
                      'License :: OSI Approved :: MIT License'
                  ],
