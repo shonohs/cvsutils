@@ -30,9 +30,10 @@ class TrainingApi:
         self.api_url = env.training_endpoint
         self.training_key = env.training_key
 
-    def train(self, project_id, force, domain_id=None, classification_type=None):
+    def train(self, project_id, force, domain_id=None, classification_type=None, export_capability=None):
         assert (not classification_type) or classification_type in ['multilabel', 'multiclass']
-        if domain_id or classification_type:
+        assert isinstance(export_capability, list)
+        if domain_id or classification_type or export_capability:
             url = self.PROJECT_API.format(project_id=project_id)
             response = self._request('GET', url)
             current_domain_id = uuid.UUID(response['settings']['domainId'])
@@ -42,6 +43,9 @@ class TrainingApi:
                 updated = True
             if classification_type and response['settings']['classificationType'] == classification_type:
                 response['settings']['classificationType'] = classification_type
+                updated = True
+            if export_capability and set(response['settings']['targetExportPlatforms']) != set(export_capability):
+                response['settings']['targetExportPlatforms'] = export_capability
                 updated = True
             if updated:
                 self._request('PATCH', url, json=response)

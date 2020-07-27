@@ -7,11 +7,13 @@ from ..common import Environment
 from ..training_api import TrainingApi
 
 EXPORT_TYPES = {
+    'coreml': ('coreml', None),
     'tensorflow': ('tensorflow', None),
     'tensorflowlite': ('tensorflow', 'tensorflowlite'),
     'onnx': ('onnx', None),
-    'coreml': ('coreml', None),
-    'openvino': ('openvino', None)
+    'openvino': ('openvino', None),
+    'openvino_no_postprocess': ('openvino', 'NoPostProcess'),
+    'vaidk': ('vaidk', None)
 }
 
 

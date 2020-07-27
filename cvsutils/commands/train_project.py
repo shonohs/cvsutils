@@ -5,10 +5,10 @@ from ..common import Environment
 from ..training_api import TrainingApi
 
 
-def train_project(env, project_id, force, domain_id, classification_type):
+def train_project(env, project_id, force, domain_id, classification_type, export_capability):
     training_api = TrainingApi(env)
 
-    iteration_id = training_api.train(project_id, force, domain_id, classification_type)
+    iteration_id = training_api.train(project_id, force, domain_id, classification_type, export_capability)
     print(f"Training started: iteration_id={iteration_id}")
 
     status = 'Training'
@@ -29,9 +29,10 @@ def main():
     parser.add_argument('--domain_id', type=str, default=None, help="Domain id")
     parser.add_argument('--force', action='store_true', help="Trigger training even if the dataset is not changed")
     parser.add_argument('--type', choices=['multiclass', 'multilabel'], default=None, help="Classification type")
+    parser.add_argument('--capability', nargs='+', help="Export capability")
 
     args = parser.parse_args()
-    train_project(Environment(), uuid.UUID(args.project_id), args.force, args.domain_id, args.type)
+    train_project(Environment(), uuid.UUID(args.project_id), args.force, args.domain_id, args.type, args.capability)
 
 
 if __name__ == '__main__':
