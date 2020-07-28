@@ -6,7 +6,7 @@ setuptools.setup(name='cvsutils',
                  description="Unofficial utility scripts for Microsoft Custom Vision Service",
                  packages=setuptools.find_packages(),
                  license='MIT',
-                 install_requires=['tqdm', 'Pillow', 'requests'],
+                 install_requires=['tqdm', 'Pillow', 'requests', 'tenacity'],
                  url='https://github.com/shonohs/cvsutils',
                  classifiers=[
                      'Intended Audience :: Developers',
