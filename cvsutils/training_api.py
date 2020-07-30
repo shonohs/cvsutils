@@ -94,6 +94,8 @@ class TrainingApi:
     def get_exports(self, project_id, iteration_id, platform, flavor):
         url = self.EXPORT_API.format(project_id=project_id, iteration_id=iteration_id)
         response = self._request('GET', url)
+        platform = platform.lower()
+        flavor = flavor.lower()
 
         for entry in response:
             if entry['platform'].lower() == platform and ((entry['flavor'] is None and flavor is None) or (entry['flavor'] and entry['flavor'].lower() == flavor)):
