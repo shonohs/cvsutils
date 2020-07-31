@@ -32,6 +32,7 @@ class TrainingApi:
 
     def train(self, project_id, force, domain_id=None, classification_type=None, export_capability=None):
         assert (not classification_type) or classification_type in ['multilabel', 'multiclass']
+        export_capability = export_capability or []
         assert isinstance(export_capability, list)
         if domain_id or classification_type or export_capability:
             url = self.PROJECT_API.format(project_id=project_id)
