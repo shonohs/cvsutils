@@ -8,9 +8,15 @@ from ..training_api import TrainingApi
 
 EXPORT_TYPES = {
     'coreml': ('coreml', None),
+    'coreml_fp16': ('coreml', 'coremlfloat16'),
+    'ivs': ('ivs', None),
     'tensorflow': ('tensorflow', None),
-    'tensorflowlite': ('tensorflow', 'tensorflowlite'),
+    'tensorflow_savedmodel': ('tensorflow', 'tensorflowsavedmodel'),
+    'tensorflow_lite': ('tensorflow', 'tensorflowlite'),
+    'tensorflow_lite_fp16': ('tensorflow', 'tensorflowlitefloat16'),
+    'tensorflow_js': ('tensorflow', 'tensorflowjs'),
     'onnx': ('onnx', None),
+    'onnx_fp16': ('onnx', 'onnxfloat16'),
     'openvino': ('openvino', None),
     'openvino_no_postprocess': ('openvino', 'NoPostProcess'),
     'vaidk': ('vaidk', None)
