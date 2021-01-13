@@ -42,7 +42,7 @@ class TrainingApi:
             if domain_id and current_domain_id != domain_id:
                 response['settings']['domainId'] = str(domain_id)
                 updated = True
-            if classification_type and response['settings']['classificationType'] == classification_type:
+            if classification_type and response['settings']['classificationType'] != classification_type:
                 response['settings']['classificationType'] = classification_type
                 updated = True
             if export_capability and set(response['settings']['targetExportPlatforms']) != set(export_capability):
@@ -254,13 +254,13 @@ class TrainingApi:
         """
         assert isinstance(project_id, uuid.UUID)
         assert all(isinstance(l[0], uuid.UUID) for l in image_ids_labels) and all(isinstance(l[1], list) for l in image_ids_labels)
-        assert max([i for label in image_ids_labels for i in label[1][1:]]) <= 1.0
-        assert min([i for label in image_ids_labels for i in label[1][1:]]) >= 0
+        # assert max([i for label in image_ids_labels for i in label[1][1:]]) <= 1.0
+        # assert min([i for label in image_ids_labels for i in label[1][1:]]) >= 0
 
         url = self.SET_IMAGE_REGION_API.format(project_id=project_id)
         regions = [{'imageId': str(l[0]), 'tagId': str(l[1][0]),
-                    'left': l[1][1], 'top': l[1][2],
-                    'width': l[1][3] - l[1][1], 'height': l[1][4] - l[1][2]} for l in image_ids_labels]
+                    'left': max(0, l[1][1]), 'top': max(0, l[1][2]),
+                    'width': min(1, l[1][3]) - max(0, l[1][1]), 'height': min(1, l[1][4]) - max(0, l[1][2])} for l in image_ids_labels]
 
         created = 0
         for i in range(int((len(regions)-0.5)//64)+1):
