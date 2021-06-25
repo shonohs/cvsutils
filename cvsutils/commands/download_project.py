@@ -4,10 +4,18 @@ import os
 import requests
 import uuid
 import PIL
+import tenacity
 from tqdm import tqdm
 from ..common import Environment
 from ..dataset import Dataset, DatasetWriter
 from ..training_api import TrainingApi
+
+
+@tenacity.retry(retry=tenacity.retry_if_exception_type(IOError), stop=tenacity.stop_after_attempt(4))
+def _download_binary(url):
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.content
 
 
 def download_project(env, project_id, output_directory):
@@ -28,9 +36,7 @@ def download_project(env, project_id, output_directory):
 
     for entry in tqdm(images, "Downloading images"):
         # Download image
-        response = requests.get(entry['url'])
-        response.raise_for_status()
-        image = response.content
+        image = _download_binary(entry['url'])
 
         if domain_type == 'image_classification':
             labels = [tag_ids.index(t) for t in entry['labels']]
