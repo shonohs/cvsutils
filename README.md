@@ -41,28 +41,6 @@ And
 To see the detailed help, please run the command with "-h" option.
 
 ## Dataset file format
-We use a custom dataset format to upload/download datasets from Custom Vision Service. A dataset consists of the following files:
-* A txt file with a list of paths to image/label files
-* [Optional] A txt file for label names. The file name should be "labels.txt".
-* Zip files which contain image files
-* [For object deteion] Zip files which contain label files
+This tool uses the SIMPLE dataset format to upload/download datasets from Custom Vision Service.
 
-The main txt file contains references for the zip files. To upload a dataset, you can just specify the path to the main txt file.
-
-### Image Classification
-The format of the main txt file is:
-```
-<image_filename><space><comma-separated label ids>
-```
-
-### Object Detection
-The format of the main txt file is:
-```
-<image_filename><space><label_filename>
-```
-
-The format of the label files is:
-```
-<label id> <left> <top> <right> <bottom>
-```
-Note that the coordinates of the bounding boxes are not normalized.
+For details, please see the [simpledataset](https://github.com/shonohs/simpledataset) repository.
