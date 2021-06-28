@@ -1,6 +1,7 @@
-import requests
 import urllib.parse
 import uuid
+import requests
+import tenacity
 
 
 class TrainingApi:
@@ -253,14 +254,14 @@ class TrainingApi:
         image_ids_labels: [(image_id, labels), (image_id, labels), ...]
         """
         assert isinstance(project_id, uuid.UUID)
-        assert all(isinstance(l[0], uuid.UUID) for l in image_ids_labels) and all(isinstance(l[1], list) for l in image_ids_labels)
+        assert all(isinstance(i[0], uuid.UUID) for i in image_ids_labels) and all(isinstance(i[1], list) for i in image_ids_labels)
         # assert max([i for label in image_ids_labels for i in label[1][1:]]) <= 1.0
         # assert min([i for label in image_ids_labels for i in label[1][1:]]) >= 0
 
         url = self.SET_IMAGE_REGION_API.format(project_id=project_id)
-        regions = [{'imageId': str(l[0]), 'tagId': str(l[1][0]),
-                    'left': max(0, l[1][1]), 'top': max(0, l[1][2]),
-                    'width': min(1, l[1][3]) - max(0, l[1][1]), 'height': min(1, l[1][4]) - max(0, l[1][2])} for l in image_ids_labels]
+        regions = [{'imageId': str(i[0]), 'tagId': str(i[1][0]),
+                    'left': max(0, i[1][1]), 'top': max(0, i[1][2]),
+                    'width': min(1, i[1][3]) - max(0, i[1][1]), 'height': min(1, i[1][4]) - max(0, i[1][2])} for i in image_ids_labels]
 
         created = 0
         for i in range(int((len(regions)-0.5)//64)+1):
@@ -273,6 +274,7 @@ class TrainingApi:
     def remove_project(self, project_id):
         raise NotImplementedError
 
+    @tenacity.retry(retry=tenacity.retry_if_exception_type(IOError), stop=tenacity.stop_after_attempt(4))
     def _request(self, method, api_path, params=None, data=None, files=None, json=None, raw_response=False):
         assert method in ['GET', 'POST', 'PATCH', 'DELETE']
 
