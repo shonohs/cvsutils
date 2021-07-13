@@ -14,7 +14,7 @@ def list_projects(env, verbose):
             if iterations:
                 print("Iterations:")
                 for iteration in iterations:
-                    print(f"    {iteration['id']}: {iteration['name']}. Domain: {iteration['domain_id']}")
+                    print(f"    {iteration['id']}: {iteration['name']}. Domain: {iteration['domain_id']}. Published: {iteration['publish_name']}")
 
 
 def main():

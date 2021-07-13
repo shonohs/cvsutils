@@ -128,7 +128,7 @@ class TrainingApi:
 
         for r in response:
             domain_id = uuid.UUID(r['domainId']) if r['domainId'] else None
-            iterations.append({'id': uuid.UUID(r['id']), 'name': r['name'], 'domain_id': domain_id, 'created_at': r['created']})
+            iterations.append({'id': uuid.UUID(r['id']), 'name': r['name'], 'domain_id': domain_id, 'created_at': r['created'], 'publish_name': r['publishName']})
         return iterations
 
     def get_iteration_eval(self, project_id, iteration_id, threshold=0.5, iou_threshold=0.3):
