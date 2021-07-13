@@ -86,7 +86,7 @@ class FileReader:
             with self.zip_objects[zip_filepath].open(entrypath) as f:
                 return [line for line in f.read().decode('utf-8').split('\n') if line] if mode == 'r' else f.read()
         else:
-            with open(os.path.join(self.base_dir, filepath)) as f:
+            with open(os.path.join(self.base_dir, filepath), mode) as f:
                 return f.read()
 
 
@@ -106,12 +106,12 @@ class Dataset:
         if self.dataset_type == 'image_classification':
             pass
         elif self.dataset_type == 'object_detection':
-            for image, labels in self.images:
-                assert image
+            for i, (image, labels) in enumerate(self.images):
+                if not image:
+                    raise RuntimeError(f"{i}: missing an image.")
                 for label, x, y, x2, y2 in labels:
-                    assert label >= 0
-                    assert x >= 0 and y >= 0
-                    assert x2 > x and y2 > y
+                    if label < 0 or x <0 or y < 0 or x >= x2 or y >= y2:
+                        raise RuntimeError(f"{i}: Invalid bounding box: {label} {x} {y} {x2} {y2}")
 
     def add_data(self, image, labels):
         assert image
