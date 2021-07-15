@@ -10,10 +10,9 @@ from ..training_api import TrainingApi
 
 DEFAULT_IC_DOMAIN_ID = 'ee85a74c-405e-4adc-bb47-ffa8ca0c9f31'
 DEFAULT_OD_DOMAIN_ID = 'da2e3a8a-40a5-4171-82f4-58522f70fbc1'
-BATCH_SIZE = 32
 
 
-def create_project(env, dataset_filepath, project_name, domain_id):
+def create_project(env, dataset_filepath, project_name, domain_id, batch_size, ignore_error):
     training_api = TrainingApi(env)
     dataset = DatasetReader.open(dataset_filepath)
 
@@ -43,18 +42,21 @@ def create_project(env, dataset_filepath, project_name, domain_id):
     # Upload images
     batch_images = []
     batch_labels = []
+    batch_indices = []
     for i in tqdm(range(len(dataset)), "Uploading images"):
         image, labels = dataset.get(i)
         batch_images.append(image)
         batch_labels.append(labels)
+        batch_indices.append(i)
 
-        if len(batch_images) >= BATCH_SIZE:
-            _upload_batch(training_api, dataset.dataset_type, project_id, tag_ids, batch_images, batch_labels)
+        if len(batch_images) >= batch_size:
+            _upload_batch(training_api, dataset.dataset_type, project_id, tag_ids, batch_images, batch_labels, batch_indices, ignore_error)
             batch_images = []
             batch_labels = []
+            batch_indices = []
 
     if batch_images:
-        _upload_batch(training_api, dataset.dataset_type, project_id, tag_ids, batch_images, batch_labels)
+        _upload_batch(training_api, dataset.dataset_type, project_id, tag_ids, batch_images, batch_labels, batch_indices, ignore_error)
 
     print(f"Uploaded {len(dataset)} images")
 
@@ -64,24 +66,36 @@ def _get_image_size(image):
         return f.size
 
 
-def _upload_batch(training_api, dataset_type, project_id, tag_ids, batch_images, batch_labels):
-    image_ids = training_api.create_images(project_id, batch_images)
-    if dataset_type == 'image_classification':
-        labels = [(image_ids[image_index], tag_ids[l]) for image_index, labels in enumerate(batch_labels) for l in labels]
-        if labels:
-            training_api.set_image_classification_tags(project_id, labels)
-    elif dataset_type == 'object_detection':
-        image_sizes = [_get_image_size(i) for i in batch_images]
-        labels = [(image_ids[image_index], [tag_ids[l[0]],
-                                            l[1] / image_sizes[image_index][0],
-                                            l[2] / image_sizes[image_index][1],
-                                            l[3] / image_sizes[image_index][0],
-                                            l[4] / image_sizes[image_index][1]]) for image_index, labels in enumerate(batch_labels) for l in labels]
+def _upload_batch(training_api, dataset_type, project_id, tag_ids, batch_images, batch_labels, batch_indices, ignore_error):
+    assert dataset_type in ['image_classification', 'object_detection']
+    try:
+        image_ids = training_api.create_images(project_id, batch_images)
+    except Exception as e:
+        print(f"Failed to upload images: {batch_indices}")
+        print(e)
+        if not ignore_error:
+            raise
 
-        if labels:
-            training_api.set_object_detection_tags(project_id, labels)
-    else:
-        raise RuntimeError(f"Unknown dataset type: {dataset_type}")
+    try:
+        if dataset_type == 'image_classification':
+            labels = [(image_ids[image_index], tag_ids[label]) for image_index, labels in enumerate(batch_labels) for label in labels]
+            if labels:
+                training_api.set_image_classification_tags(project_id, labels)
+        elif dataset_type == 'object_detection':
+            image_sizes = [_get_image_size(i) for i in batch_images]
+            labels = [(image_ids[image_index], [tag_ids[label[0]],
+                                                label[1] / image_sizes[image_index][0],
+                                                label[2] / image_sizes[image_index][1],
+                                                label[3] / image_sizes[image_index][0],
+                                                label[4] / image_sizes[image_index][1]]) for image_index, labels in enumerate(batch_labels) for label in labels]
+
+            if labels:
+                training_api.set_object_detection_tags(project_id, labels)
+    except Exception as e:
+        print(f"Failed to upload tags for {batch_indices}.")
+        print(e)
+        if not ignore_error:
+            raise
 
 
 def main():
@@ -89,9 +103,15 @@ def main():
     parser.add_argument('dataset_filename', type=pathlib.Path, help="Dataset file path")
     parser.add_argument('--project_name', help="Project name")
     parser.add_argument('--domain_id', type=uuid.UUID, help="Domain id")
+    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--ignore_error', action='store_true')
 
     args = parser.parse_args()
-    create_project(Environment(), args.dataset_filename, args.project_name, args.domain_id)
+
+    if args.batch_size < 1:
+        parser.error("Batch size must be a positive number.")
+
+    create_project(Environment(), args.dataset_filename, args.project_name, args.domain_id, args.batch_size, args.ignore_error)
 
 
 if __name__ == '__main__':
