@@ -1,6 +1,6 @@
 import argparse
 import io
-import os
+import pathlib
 import uuid
 import PIL
 from tqdm import tqdm
@@ -13,20 +13,18 @@ DEFAULT_OD_DOMAIN_ID = 'da2e3a8a-40a5-4171-82f4-58522f70fbc1'
 BATCH_SIZE = 32
 
 
-def create_project(env, dataset_filename, project_name, domain_id):
+def create_project(env, dataset_filepath, project_name, domain_id):
     training_api = TrainingApi(env)
-    dataset = DatasetReader.open(dataset_filename)
+    dataset = DatasetReader.open(dataset_filepath)
 
     # Set default project name. {dir_name}/{file_name}
     if not project_name:
-        dir_name = os.path.basename(os.path.dirname(dataset_filename))
-        file_name = os.path.basename(dataset_filename)
+        dir_name = dataset_filepath.resolve().parent.name
+        file_name = dataset_filepath.name
         project_name = f'{dir_name}/{file_name}'
 
     # Set default domain id.
-    if domain_id:
-        domain_id = uuid.UUID(domain_id)
-    else:
+    if not domain_id:
         if dataset.dataset_type == 'image_classification':
             domain_id = uuid.UUID(DEFAULT_IC_DOMAIN_ID)
         elif dataset.dataset_type == 'object_detection':
@@ -87,10 +85,10 @@ def _upload_batch(training_api, dataset_type, project_id, tag_ids, batch_images,
 
 
 def main():
-    parser = argparse.ArgumentParser("Upload a project to Custom Vision Service")
-    parser.add_argument('dataset_filename', type=str, help="Dataset file path")
-    parser.add_argument('--project_name', type=str, default=None, help="Project name")
-    parser.add_argument('--domain_id', type=str, default=None, help="Domain id")
+    parser = argparse.ArgumentParser(description="Upload a project to Custom Vision Service")
+    parser.add_argument('dataset_filename', type=pathlib.Path, help="Dataset file path")
+    parser.add_argument('--project_name', help="Project name")
+    parser.add_argument('--domain_id', type=uuid.UUID, help="Domain id")
 
     args = parser.parse_args()
     create_project(Environment(), args.dataset_filename, args.project_name, args.domain_id)
