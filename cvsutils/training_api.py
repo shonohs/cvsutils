@@ -29,7 +29,8 @@ class TrainingApi:
     def __init__(self, env):
         self.env = env
         self.api_url = env.training_endpoint
-        self.training_key = env.training_key
+        self._session = requests.Session()
+        self._session.headers.update({'Training-Key': env.training_key})
 
     def train(self, project_id, force, domain_id=None, classification_type=None, export_capability=None):
         assert (not classification_type) or classification_type in ['multilabel', 'multiclass']
@@ -274,13 +275,12 @@ class TrainingApi:
     def remove_project(self, project_id):
         raise NotImplementedError
 
-    @tenacity.retry(retry=tenacity.retry_if_exception_type(IOError), stop=tenacity.stop_after_attempt(4))
+    @tenacity.retry(retry=tenacity.retry_if_exception_type(IOError), stop=tenacity.stop_after_attempt(4), wait=tenacity.wait_exponential())
     def _request(self, method, api_path, params=None, data=None, files=None, json=None, raw_response=False):
         assert method in ['GET', 'POST', 'PATCH', 'DELETE']
 
         url = urllib.parse.urljoin(self.api_url, api_path)
-        headers = {'Training-Key': self.training_key}
-        response = requests.request(method, url, params=params, data=data, json=json, files=files, headers=headers)
+        response = self._session.request(method, url, params=params, data=data, json=json, files=files)
         if not response.ok:
             print(response.json())
 
