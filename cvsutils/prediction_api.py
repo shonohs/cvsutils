@@ -1,6 +1,8 @@
-import requests
 import urllib
 import uuid
+
+import requests
+import tenacity
 
 
 class PredictionApi:
@@ -8,9 +10,9 @@ class PredictionApi:
     DETECT_IMAGE = '/customvision/v3.0/prediction/{project_id}/detect/iterations/{name}/image/nostore'
 
     def __init__(self, env):
-        self.env = env
         self.api_url = env.prediction_endpoint
-        self.prediction_key = env.prediction_key
+        self._session = requests.Session()
+        self._session.headers.update({'Prediction-Key': env.prediction_key, 'Content-Type': 'application/octet-stream'})
 
     def predict(self, project_id, task_type, name, image_binary):
         assert task_type in ['image_classification', 'object_detection']
@@ -34,11 +36,10 @@ class PredictionApi:
                  'label_name': r['tagName'],
                  'probability': r['probability']} for r in response['predictions']]
 
+    @tenacity.retry(retry=tenacity.retry_if_exception_type(IOError), stop=tenacity.stop_after_attempt(4), wait=tenacity.wait_exponential())
     def _request(self, api_path, data):
         url = urllib.parse.urljoin(self.api_url, api_path)
-        headers = {'Prediction-Key': self.prediction_key,
-                   'Content-Type': 'application/octet-stream'}
-        response = requests.request('POST', url, data=data, headers=headers)
+        response = self._session.request('POST', url, data=data, timeout=60)
         if not response.ok:
             print(response)
 

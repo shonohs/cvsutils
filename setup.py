@@ -2,7 +2,7 @@ import setuptools
 
 
 setuptools.setup(name='cvsutils',
-                 version='0.1.5',
+                 version='0.1.6',
                  description="Unofficial utility scripts for Microsoft Custom Vision Service",
                  packages=setuptools.find_packages(),
                  license='MIT',

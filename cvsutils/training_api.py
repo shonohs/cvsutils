@@ -280,7 +280,7 @@ class TrainingApi:
         assert method in ['GET', 'POST', 'PATCH', 'DELETE']
 
         url = urllib.parse.urljoin(self.api_url, api_path)
-        response = self._session.request(method, url, params=params, data=data, json=json, files=files)
+        response = self._session.request(method, url, params=params, data=data, json=json, files=files, timeout=60)
         if not response.ok:
             print(response.json())
 
