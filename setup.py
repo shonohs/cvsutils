@@ -14,6 +14,7 @@ setuptools.setup(name='cvsutils',
                  ],
                  entry_points={
                      'console_scripts': [
+                         'cvs_add_images=cvsutils.commands.add_images:main',
                          'cvs_create_project=cvsutils.commands.create_project:main',
                          'cvs_download_project=cvsutils.commands.download_project:main',
                          'cvs_evaluate_project=cvsutils.commands.evaluate_project:main',
@@ -21,6 +22,7 @@ setuptools.setup(name='cvsutils',
                          'cvs_get_domains=cvsutils.commands.get_domains:main',
                          'cvs_list_projects=cvsutils.commands.list_projects:main',
                          'cvs_predict_image=cvsutils.commands.predict_image:main',
+                         'cvs_show_project=cvsutils.commands.show_project:main',
                          'cvs_remove_iteration=cvsutils.commands.remove_iteration:main',
                          'cvs_train_project=cvsutils.commands.train_project:main',
                          'cvs_validate_dataset=cvsutils.commands.validate_dataset_file:main'

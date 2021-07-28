@@ -5,11 +5,12 @@ import tenacity
 
 
 class TrainingApi:
-    CREATE_PROJECT_API = '/customvision/v3.2/training/projects'
-    PROJECT_API = '/customvision/v3.2/training/projects/{project_id}'
-    DOMAINS_API = '/customvision/v3.2/training/domains'
+    CREATE_PROJECT_API = '/customvision/v3.3/training/projects'
+    PROJECT_API = '/customvision/v3.3/training/projects/{project_id}'
+    DOMAINS_API = '/customvision/v3.3/training/domains'
 
     CREATE_IMAGE_API = PROJECT_API + '/images'
+    IMAGES_COUNT_API = PROJECT_API + '/images/count'
     TAG_API = PROJECT_API + '/tags'
     TRAIN_PROJECT_API = PROJECT_API + '/train'
     TAGGED_IMAGES_API = PROJECT_API + '/images/tagged'
@@ -147,7 +148,8 @@ class TrainingApi:
         return {
             'name': response['name'],
             'description': response['description'],
-            'domain_id': uuid.UUID(response['settings']['domainId'])
+            'domain_id': uuid.UUID(response['settings']['domainId']),
+            'created_at': response['created']
         }
 
     def get_projects(self):
@@ -193,6 +195,11 @@ class TrainingApi:
             all_images.extend([{'url': r['originalImageUri'], 'labels': []} for r in response])
         assert len(all_images) == num_tagged_images + num_untagged_images
         return all_images
+
+    def get_num_images(self, project_id):
+        url = self.IMAGES_COUNT_API.format(project_id=project_id)
+        num_images = self._request('GET', url)
+        return num_images
 
     def get_domain(self, domain_id):
         url = self.DOMAIN_API.format(domain_id=domain_id)
@@ -245,6 +252,9 @@ class TrainingApi:
         assert all(isinstance(t[0], uuid.UUID) for t in image_tag_ids)
         assert all(isinstance(t[1], uuid.UUID) for t in image_tag_ids)
 
+        if not image_tag_ids:
+            return True
+
         url = self.SET_IMAGE_TAG_API.format(project_id=project_id)
         tags = {'tags': [{'imageId': str(t[0]), 'tagId': str(t[1])} for t in image_tag_ids]}
         response = self._request('POST', url, json=tags)
@@ -258,6 +268,9 @@ class TrainingApi:
         assert all(isinstance(i[0], uuid.UUID) for i in image_ids_labels) and all(isinstance(i[1], list) for i in image_ids_labels)
         # assert max([i for label in image_ids_labels for i in label[1][1:]]) <= 1.0
         # assert min([i for label in image_ids_labels for i in label[1][1:]]) >= 0
+
+        if not image_ids_labels:
+            return True
 
         url = self.SET_IMAGE_REGION_API.format(project_id=project_id)
         regions = [{'imageId': str(i[0]), 'tagId': str(i[1][0]),

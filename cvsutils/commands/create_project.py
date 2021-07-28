@@ -79,8 +79,7 @@ def _upload_batch(training_api, dataset_type, project_id, tag_ids, batch_images,
     try:
         if dataset_type == 'image_classification':
             labels = [(image_ids[image_index], tag_ids[label]) for image_index, labels in enumerate(batch_labels) for label in labels]
-            if labels:
-                training_api.set_image_classification_tags(project_id, labels)
+            training_api.set_image_classification_tags(project_id, labels)
         elif dataset_type == 'object_detection':
             image_sizes = [_get_image_size(i) for i in batch_images]
             labels = [(image_ids[image_index], [tag_ids[label[0]],
@@ -89,8 +88,7 @@ def _upload_batch(training_api, dataset_type, project_id, tag_ids, batch_images,
                                                 label[3] / image_sizes[image_index][0],
                                                 label[4] / image_sizes[image_index][1]]) for image_index, labels in enumerate(batch_labels) for label in labels]
 
-            if labels:
-                training_api.set_object_detection_tags(project_id, labels)
+            training_api.set_object_detection_tags(project_id, labels)
     except Exception as e:
         print(f"Failed to upload tags for {batch_indices}.")
         print(e)
