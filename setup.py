@@ -1,9 +1,13 @@
+import pathlib
 import setuptools
 
+readme_filepath = pathlib.Path(__file__).parent / 'README.md'
 
 setuptools.setup(name='cvsutils',
-                 version='0.1.7',
+                 version='0.1.8',
                  description="Unofficial utility scripts for Microsoft Custom Vision Service",
+                 long_description=readme_filepath.read_text(),
+                 long_description_content_type='text/markdown',
                  packages=setuptools.find_packages(),
                  license='MIT',
                  install_requires=['tqdm', 'Pillow', 'requests', 'tenacity'],
