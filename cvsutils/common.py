@@ -1,6 +1,11 @@
 import contextlib
+import io
+import logging
 import os
 import uuid
+import PIL.Image
+
+logger = logging.getLogger(__name__)
 
 
 KNOWN_DOMAINS = {
@@ -83,3 +88,30 @@ def with_published(training_api, iteration):
     if published:
         training_api.unpublish_iteration(iteration['project_id'], iteration['id'])
         print("Unpublished the iteration")
+
+
+def compress_image_if_needed_for_prediction(image_binary):
+    MAX_IMAGE_SIZE = 4194304
+
+    if len(image_binary) < MAX_IMAGE_SIZE:
+        return image_binary
+
+    logger.warning(f"Image size is too large. Re-compressing... ({len(image_binary)})")
+    with PIL.Image.open(io.BytesIO(image_binary)) as image:
+        # First, re-compress with JPEG.
+        for i in range(4):
+            output = io.BytesIO()
+            # The default JPEG quality is 75.
+            image.save(output, format='JPEG', quality=75 - i * 20)
+            image_binary = output.getvalue()
+
+            if len(image_binary) < MAX_IMAGE_SIZE:
+                return image_binary
+
+    raise RuntimeError(f"Failed to compress the image size. ({len(image_binary)})")
+
+
+def get_image_size(image_binary):
+    """Returns image's (width, height)."""
+    with PIL.Image.open(io.BytesIO(image_binary)) as f:
+        return f.size

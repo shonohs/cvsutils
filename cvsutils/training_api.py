@@ -159,10 +159,11 @@ class TrainingApi:
             projects.append({'id': uuid.UUID(r['id']), 'name': r['name'], 'created_at': r['created'], 'modified_at': r['lastModified']})
         return projects
 
-    def get_tags(self, project_id):
+    def get_tags(self, project_id, iteration_id=None):
         """Get a list of pairs of (tag_name, tag_id). The returned list is sorted by tag_name."""
         url = self.TAG_API.format(project_id=project_id)
-        response = self._request('GET', url)
+        params = {'iterationId': str(iteration_id)} if iteration_id else {}
+        response = self._request('GET', url, params)
         return [(t['name'], uuid.UUID(t['id'])) for t in response]
 
     def get_images(self, project_id):

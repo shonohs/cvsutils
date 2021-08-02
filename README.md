@@ -35,6 +35,7 @@ And
 * cvs_add_images
 * cvs_evaluate_project
 * cvs_get_domains
+* cvs_predict_dataset
 * cvs_predict_image
 * cvs_remove_iteration
 * cvs_show_project
