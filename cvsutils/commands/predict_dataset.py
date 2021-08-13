@@ -1,4 +1,5 @@
 import argparse
+from collections import defaultdict
 import pathlib
 import uuid
 import tqdm
@@ -8,10 +9,7 @@ from ..prediction_api import PredictionApi
 from ..training_api import TrainingApi
 
 
-DEFAULT_PROB_THRESHOLD = 0.1
-
-
-def predict_dataset(env, project_id, iteration_id, input_dataset_filepath, output_dataset_filepath, prob_threshold):
+def predict_dataset(env, project_id, iteration_id, input_dataset_filepath, output_dataset_filepath, prob_thresholds_per_label):
     training_api = TrainingApi(env)
     prediction_api = PredictionApi(env)
 
@@ -24,16 +22,13 @@ def predict_dataset(env, project_id, iteration_id, input_dataset_filepath, outpu
     tag_names, tag_ids = zip(*cvs_labels)
     new_dataset.labels = tag_names
 
-    class_agnostic_threshold = float(prob_threshold[0]) if len(prob_threshold) % 2 else DEFAULT_PROB_THRESHOLD
-    classwise_prob_threshold = {prob_threshold[i-1]: float(prob_threshold[i]) for i in range(1 + len(prob_threshold) % 2, len(prob_threshold), 2)}
-
     with with_published(training_api, iteration) as publish_name:
         for i in tqdm.tqdm(range(len(dataset)), "Predicting"):
             original_image_binary, _ = dataset.get(i)
             image_binary = compress_image_if_needed_for_prediction(original_image_binary)
             width, height = get_image_size(image_binary)
             pred = prediction_api.predict(project_id, dataset.dataset_type, publish_name, image_binary)
-            pred = [p for p in pred if p['probability'] >= classwise_prob_threshold.get(p['label_name'], class_agnostic_threshold)]
+            pred = [p for p in pred if p['probability'] >= prob_thresholds_per_label[p['label_name']]]
             if domain_type == 'image_classification':
                 labels = [tag_ids.index(p['label_id']) for p in pred]
             elif domain_type == 'object_detection':
@@ -54,7 +49,8 @@ def main():
     parser.add_argument('iteration_id', type=uuid.UUID)
     parser.add_argument('input_dataset_filepath', type=pathlib.Path, help="A dataset that contains input images. The labels will be ignored.")
     parser.add_argument('output_directory', type=pathlib.Path)
-    parser.add_argument('--threshold', nargs='*', default=[DEFAULT_PROB_THRESHOLD], help="Probability threshold (default=0.1)")
+    parser.add_argument('--threshold', type=float, default=0.1, help="Probability threshold (default=0.1)")
+    parser.add_argument('--threshold_per_label', nargs=2, metavar=('LABEL_NAME', 'THRESHOLD'), action='append', help="Probability threshold per label")
 
     args = parser.parse_args()
 
@@ -67,8 +63,12 @@ def main():
     if args.output_directory.exists():
         parser.error(f"{args.output_dataset_filepath} already exists.")
 
+    prob_thresholds_per_label = defaultdict(lambda: args.threshold)
+    for label_name, threshold in args.threshold_per_label:
+        prob_thresholds_per_label[label_name] = float(threshold)
+
     output_dataset_filepath = args.output_directory / 'images.txt'
-    predict_dataset(Environment(), args.project_id, args.iteration_id, args.input_dataset_filepath, output_dataset_filepath, args.threshold)
+    predict_dataset(Environment(), args.project_id, args.iteration_id, args.input_dataset_filepath, output_dataset_filepath, prob_thresholds_per_label)
 
 
 if __name__ == '__main__':
