@@ -4,7 +4,7 @@ import setuptools
 readme_filepath = pathlib.Path(__file__).parent / 'README.md'
 
 setuptools.setup(name='cvsutils',
-                 version='0.1.8',
+                 version='0.1.9',
                  description="Unofficial utility scripts for Microsoft Custom Vision Service",
                  long_description=readme_filepath.read_text(),
                  long_description_content_type='text/markdown',
