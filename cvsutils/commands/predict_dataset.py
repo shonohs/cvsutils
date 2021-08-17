@@ -28,7 +28,7 @@ def predict_dataset(env, project_id, iteration_id, input_dataset_filepath, outpu
             image_binary = compress_image_if_needed_for_prediction(original_image_binary)
             width, height = get_image_size(image_binary)
             pred = prediction_api.predict(project_id, dataset.dataset_type, publish_name, image_binary)
-            pred = [p for p in pred if p['probability'] >= prob_thresholds_per_label[p['label_name']]]
+            pred = [p for p in pred if p['probability'] > prob_thresholds_per_label[p['label_name']]]
             if domain_type == 'image_classification':
                 labels = [tag_ids.index(p['label_id']) for p in pred]
             elif domain_type == 'object_detection':
@@ -50,7 +50,7 @@ def main():
     parser.add_argument('input_dataset_filepath', type=pathlib.Path, help="A dataset that contains input images. The labels will be ignored.")
     parser.add_argument('output_directory', type=pathlib.Path)
     parser.add_argument('--threshold', type=float, default=0.1, help="Probability threshold (default=0.1)")
-    parser.add_argument('--threshold_per_label', nargs=2, metavar=('LABEL_NAME', 'THRESHOLD'), action='append', help="Probability threshold per label")
+    parser.add_argument('--threshold_per_label', default=[], nargs=2, metavar=('LABEL_NAME', 'THRESHOLD'), action='append', help="Probability threshold per label")
 
     args = parser.parse_args()
 
@@ -61,7 +61,10 @@ def main():
         parser.error(f"{args.input_dataset_filepath} is a directory path. Please specify a path for a txt file.")
 
     if args.output_directory.exists():
-        parser.error(f"{args.output_dataset_filepath} already exists.")
+        parser.error(f"{args.output_directory} already exists.")
+
+    if not (0 <= args.threshold <= 1):
+        parser.error(f"Threshold must be in range [0, 1]. threshold={args.threshold}")
 
     prob_thresholds_per_label = defaultdict(lambda: args.threshold)
     for label_name, threshold in args.threshold_per_label:
