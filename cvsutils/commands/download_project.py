@@ -12,11 +12,15 @@ from ..dataset import Dataset, DatasetWriter
 from ..training_api import TrainingApi
 
 
-@tenacity.retry(reraise=True, retry=tenacity.retry_if_exception_type(IOError), stop=tenacity.stop_after_attempt(4))
-def _download_binary(url):
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.content
+class ImageDownloader:
+    def __init__(self):
+        self._session = requests.Session()
+
+    @tenacity.retry(reraise=True, retry=tenacity.retry_if_exception_type(IOError), stop=tenacity.stop_after_attempt(4), wait=tenacity.wait_exponential())
+    def download_binary(self, url):
+        response = self._session.get(url)
+        response.raise_for_status()
+        return response.content
 
 
 def _has_allowed_tag(domain_type, labels, allowed_tags_set):
@@ -50,10 +54,11 @@ def download_project(env, project_id, output_directory, ignore_error, filter_tag
     print(f"Found {len(images)} images")
 
     images = [x for x in images if _has_allowed_tag(domain_type, x['labels'], allowed_tags_set)]
+    downloader = ImageDownloader()
     for entry in tqdm(images, "Downloading images"):
         try:
             # Download image
-            image = _download_binary(entry['url'])
+            image = downloader.download_binary(entry['url'])
         except IOError as e:
             if ignore_error:
                 tqdm.write(f"Failed to download {entry['url']} due to {e}. Ignoring the error.")
@@ -90,6 +95,10 @@ def main():
     parser.add_argument('--filter_tag', type=uuid.UUID, nargs='+', help="Specify tags to download.")
 
     args = parser.parse_args()
+
+    if (args.output_directory / 'images.txt').exists():
+        parser.error(f"{args.output_directory / 'images.txt'} already exists.")
+
     download_project(Environment(), args.project_id, args.output_directory, args.ignore_error, args.filter_tag)
 
 
