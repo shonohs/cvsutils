@@ -4,6 +4,8 @@ import logging
 import os
 import uuid
 import PIL.Image
+import requests
+import tenacity
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +68,17 @@ class Environment:
         if not self._prediction_resource_id:
             raise RuntimeError('Please set CVS_PREDICTION_RESOURCE_ID')
         return self._prediction_resource_id
+
+
+class ImageDownloader:
+    def __init__(self):
+        self._session = requests.Session()
+
+    @tenacity.retry(reraise=True, retry=tenacity.retry_if_exception_type(IOError), stop=tenacity.stop_after_attempt(4), wait=tenacity.wait_exponential())
+    def download_binary(self, url):
+        response = self._session.get(url)
+        response.raise_for_status()
+        return response.content
 
 
 def get_task_type_by_domain_id(domain_id):

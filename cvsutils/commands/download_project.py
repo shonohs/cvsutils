@@ -1,26 +1,11 @@
 import argparse
-import io
 import os
 import pathlib
-import requests
 import uuid
-import PIL
-import tenacity
 from tqdm import tqdm
-from ..common import Environment
+from ..common import Environment, ImageDownloader, get_image_size
 from ..dataset import Dataset, DatasetWriter
 from ..training_api import TrainingApi
-
-
-class ImageDownloader:
-    def __init__(self):
-        self._session = requests.Session()
-
-    @tenacity.retry(reraise=True, retry=tenacity.retry_if_exception_type(IOError), stop=tenacity.stop_after_attempt(4), wait=tenacity.wait_exponential())
-    def download_binary(self, url):
-        response = self._session.get(url)
-        response.raise_for_status()
-        return response.content
 
 
 def _has_allowed_tag(domain_type, labels, allowed_tags_set):
@@ -36,9 +21,6 @@ def _has_allowed_tag(domain_type, labels, allowed_tags_set):
 
 
 def download_project(env, project_id, output_directory, ignore_error, filter_tag):
-    if os.path.exists(output_directory):
-        raise RuntimeError(f"{output_directory} already exists")
-
     training_api = TrainingApi(env)
     domain_id = training_api.get_project(project_id)['domain_id']
     domain_type = training_api.get_domain(domain_id)['type']
@@ -69,7 +51,7 @@ def download_project(env, project_id, output_directory, ignore_error, filter_tag
         if domain_type == 'image_classification':
             labels = [tag_ids.index(t) for t in entry['labels'] if t in allowed_tags_set]
         elif domain_type == 'object_detection':
-            image_size = PIL.Image.open(io.BytesIO(image)).size
+            image_size = get_image_size(image)
             labels = [[tag_ids.index(t[0]),
                        int(t[1] * image_size[0]),
                        int(t[2] * image_size[1]),
@@ -82,7 +64,7 @@ def download_project(env, project_id, output_directory, ignore_error, filter_tag
 
     print(f"Downloaded {len(dataset)} images")
 
-    os.makedirs(output_directory, exist_ok=True)
+    output_directory.mkdir(parents=True, exist_ok=True)
     DatasetWriter.write(dataset, os.path.join(output_directory, 'images.txt'))
     print(f"Saved the dataset to {output_directory}")
 
@@ -96,8 +78,8 @@ def main():
 
     args = parser.parse_args()
 
-    if (args.output_directory / 'images.txt').exists():
-        parser.error(f"{args.output_directory / 'images.txt'} already exists.")
+    if args.output_directory.exists():
+        parser.error(f"{args.output_directory} already exists.")
 
     download_project(Environment(), args.project_id, args.output_directory, args.ignore_error, args.filter_tag)
 

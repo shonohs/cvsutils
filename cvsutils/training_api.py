@@ -19,6 +19,7 @@ class TrainingApi:
     UNTAGGED_IMAGES_COUNT_API = PROJECT_API + '/images/untagged/count'
     SET_IMAGE_TAG_API = PROJECT_API + '/images/tags'
     SET_IMAGE_REGION_API = PROJECT_API + '/images/regions'
+    QUERY_PREDICTIONS_API = PROJECT_API + '/predictions/query'
 
     ITERATIONS_API = PROJECT_API + '/iterations'
     ITERATION_API = PROJECT_API + '/iterations/{iteration_id}'
@@ -201,6 +202,18 @@ class TrainingApi:
         url = self.IMAGES_COUNT_API.format(project_id=project_id)
         num_images = self._request('GET', url)
         return num_images
+
+    def get_predictions(self, project_id, iteration_id):
+        # TODO
+        url = self.QUERY_PREDICTIONS_API.format(project_id=project_id)
+        req = {'orderBy': 'oldest', 'maxCount': 128, 'iterationId': str(iteration_id)}
+        response = self._request('POST', url, json=req)
+        results = []
+        for result in response['results']:
+            image_url = result['originalImageUri']
+            pred = result['predictions']
+            results.append({'image_url': image_url, 'predictions': pred})
+        return results
 
     def get_domain(self, domain_id):
         url = self.DOMAIN_API.format(domain_id=domain_id)

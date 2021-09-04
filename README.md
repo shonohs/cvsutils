@@ -33,6 +33,7 @@ cvs_export_model <project_id> <iteration_id> {tensorflow,coreml,onnx} [--output_
 
 And
 * cvs_add_images
+* cvs_download_predictions
 * cvs_evaluate_project
 * cvs_get_domains
 * cvs_predict_dataset

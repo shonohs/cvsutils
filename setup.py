@@ -20,6 +20,7 @@ setuptools.setup(name='cvsutils',
                      'console_scripts': [
                          'cvs_add_images=cvsutils.commands.add_images:main',
                          'cvs_create_project=cvsutils.commands.create_project:main',
+                         'cvs_download_predictions=cvsutils.commands.download_predictions:main',
                          'cvs_download_project=cvsutils.commands.download_project:main',
                          'cvs_evaluate_project=cvsutils.commands.evaluate_project:main',
                          'cvs_export_model=cvsutils.commands.export_model:main',
